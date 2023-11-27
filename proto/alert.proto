@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message SendAlert {
+    string d_ip = 1;
+    string src_ip = 2;
+    string rule_type = 3;
+    string date = 4;
+}
