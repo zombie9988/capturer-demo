@@ -1,2 +1,2 @@
-fastapi
-SQLAlchemy
+grpcio
+grpcio-tools

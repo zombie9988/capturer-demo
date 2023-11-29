@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+alert_pb2_grpc.py
+alert_pb2.py
+alert_pb2.pyi
+
 # C extensions
 *.so
 
