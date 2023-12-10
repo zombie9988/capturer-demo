@@ -4,6 +4,11 @@ package alerts;
 
 service AlertCapturer {
     rpc SendAlert (Alert) returns (Result) {}
+    rpc ReceiveAlert (Empty) returns (stream Alert) {}
+}
+
+message Empty {
+
 }
 
 message Alert {

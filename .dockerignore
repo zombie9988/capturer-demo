@@ -7,3 +7,4 @@ alert_pb2.py
 alert_pb2.pyi
 Dockerfile
 README.md
+compose.yml

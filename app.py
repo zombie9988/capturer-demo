@@ -1,18 +1,14 @@
 import asyncio
 import grp
 import logging
+import psycopg2
+
 from math import log
 
 import grpc
 
 from alert_pb2 import *
 from alert_pb2_grpc import *
-
-send_alert_message = Alert()
-send_alert_message.d_ip = "192.168.1.1"
-send_alert_message.src_ip = "192.168.1.1"
-send_alert_message.rule_type = Alert.RULE_NOTE
-send_alert_message.date = "11.05.2022"
 
 class Capturer(AlertCapturer):
     async def SendAlert(
@@ -22,8 +18,54 @@ class Capturer(AlertCapturer):
         ) -> Result:
             await self.Write(request=request)
             return Result(res_type=Result.RES_OK)
-        
+    
+    async def ReceiveAlert(
+        self,
+        request: Empty,
+        context: grpc.aio.ServicerContext,
+        ):
+            try:
+                conn = psycopg2.connect(host="postgres", dbname="alerts", user="postgres", password="postgres")
+                cursor = conn.cursor()
+
+                insert_query = 'SELECT * FROM alerts;'
+                cursor.execute(insert_query)
+                for al in cursor.fetchall():
+                    print(al)
+                    msg = Alert()
+                    msg.d_ip = al[3]
+                    msg.src_ip = al[2]
+                    msg.rule_type = Alert.RULE_ALERT
+                    msg.date = "Not Impl"
+                    msg.rule_name = al[1]
+                    yield msg
+
+            except psycopg2.Error as e:
+                logging.error("Error select alert data:", e)
+
+            finally:
+                if conn is not None:
+                    cursor.close()
+                    conn.close()
+    
     async def Write(self, request: Alert):
+        try:
+            conn = psycopg2.connect(host="postgres", dbname="alerts", user="postgres", password="postgres")
+            cursor = conn.cursor()
+
+            insert_query = 'INSERT INTO alerts (alert_name, src_ip, dst_ip) VALUES (%s, %s, %s)'
+            cursor.execute(insert_query, [request.rule_name, request.src_ip, request.d_ip])
+            conn.commit()
+
+        except psycopg2.Error as e:
+            logging.error("Error inserting user data:", e)
+
+        finally:
+            # Close communication with the database
+            if conn is not None:
+                cursor.close()
+                conn.close()
+        
         logging.info(f"Alert: {request.rule_type} from {request.src_ip} to {request.d_ip}")
 
 async def serve():
