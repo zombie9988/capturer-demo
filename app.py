@@ -4,11 +4,12 @@ import logging
 import psycopg2
 
 from math import log
-
 import grpc
 
 from alert_pb2 import *
 from alert_pb2_grpc import *
+
+import config
 
 class Capturer(AlertCapturer):
     async def SendAlert(
@@ -25,7 +26,7 @@ class Capturer(AlertCapturer):
         context: grpc.aio.ServicerContext,
         ):
             try:
-                conn = psycopg2.connect(host="postgres", dbname="alerts", user="postgres", password="postgres")
+                conn = psycopg2.connect(host=config.PG_HOST, dbname=config.PG_DB, user=config.PG_LOGIN, password=config.PG_PASS)
                 cursor = conn.cursor()
 
                 insert_query = 'SELECT * FROM alerts;'
@@ -50,7 +51,7 @@ class Capturer(AlertCapturer):
     
     async def Write(self, request: Alert):
         try:
-            conn = psycopg2.connect(host="postgres", dbname="alerts", user="postgres", password="postgres")
+            conn = psycopg2.connect(host=config.PG_HOST, dbname=config.PG_DB, user=config.PG_LOGIN, password=config.PG_PASS)
             cursor = conn.cursor()
 
             insert_query = 'INSERT INTO alerts (alert_name, src_ip, dst_ip) VALUES (%s, %s, %s)'
